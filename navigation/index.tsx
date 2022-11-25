@@ -52,7 +52,7 @@ export default function Navigation({
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function RootNavigator() {
-  const isAuthenticated = false;
+  const isAuthenticated = true;
 
   if (!isAuthenticated) {
     return (
@@ -123,7 +123,7 @@ function BottomTabNavigator() {
               <FontAwesome
                 name="users"
                 size={25}
-                color={"dimGray"}
+                color={"dimgray"}
                 style={{ marginRight: 15 }}
               />
             </Pressable>
