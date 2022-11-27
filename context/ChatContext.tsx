@@ -31,6 +31,11 @@ const ChatContextProvider = ({ children }: { children: React.ReactNode }) => {
         client.devToken(user.id)
       );
       setChatClient(client);
+
+      const globalChannel = client.channel("livestream", "global", {
+        name: "notJust.dev",
+      });
+      await globalChannel.watch();
     };
 
     initChat();
