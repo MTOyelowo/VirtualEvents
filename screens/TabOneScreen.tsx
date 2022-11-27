@@ -1,32 +1,39 @@
-import { Alert, Pressable, StyleSheet } from "react-native";
+import { Alert, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 
 import { Text, View } from "../components/Themed";
 import { RootTabScreenProps } from "../types";
-import {
-  Agenda,
-  AgendaEntry,
-  AgendaSchedule,
-  DateData,
-} from "react-native-calendars";
-import { useState } from "react";
-import events from "../assets/data/events.json";
+import { Agenda, AgendaEntry, AgendaSchedule } from "react-native-calendars";
+import { gql, useQuery } from "@apollo/client";
+
+const GetEvents = gql`
+  query GetEvents {
+    Event {
+      id
+      name
+      date
+    }
+  }
+`;
+
+const getEventsSchedule = (events: []): AgendaSchedule => {
+  const items: AgendaSchedule = {};
+
+  events.forEach((event) => {
+    const day = event.date.slice(0, 10);
+
+    if (!items[day]) {
+      items[day] = [];
+    }
+    items[day].push({ ...event, day, height: 50 });
+  });
+
+  return items;
+};
 
 export default function TabOneScreen({
   navigation,
 }: RootTabScreenProps<"TabOne">) {
-  const [items, setItems] = useState<AgendaSchedule>({});
-
-  const loadItems = (day: DateData) => {
-    setItems(events);
-  };
-
-  const renderEmptyDate = () => {
-    return (
-      <View style={styles.emptyDate}>
-        <Text>This is empty date!</Text>
-      </View>
-    );
-  };
+  const { data, loading, error } = useQuery(GetEvents);
 
   const renderItem = (reservation: AgendaEntry, isFirst: boolean) => {
     const fontSize = isFirst ? 16 : 14;
@@ -41,14 +48,31 @@ export default function TabOneScreen({
       </Pressable>
     );
   };
+
+  const renderEmptyDate = () => {
+    return (
+      <View style={styles.emptyDate}>
+        <Text>This is empty date!</Text>
+      </View>
+    );
+  };
+
+  if (loading) {
+    return <ActivityIndicator />;
+  }
+
+  if (error) {
+    Alert.alert("Error fetching events", error.message);
+  }
+  const events = getEventsSchedule(data.Event);
+
   return (
     <View style={styles.container}>
       <Agenda
-        items={items}
-        selected={"2022-11-25"}
+        items={events}
+        selected={"2022-11-24"}
         renderItem={renderItem}
         renderEmptyDate={renderEmptyDate}
-        loadItemsForMonth={loadItems}
         // showOnlySelectedDayItems
       />
     </View>
