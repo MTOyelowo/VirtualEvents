@@ -1,13 +1,22 @@
 import { useUserData } from "@nhost/react";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { StreamChat } from "stream-chat";
+import { StreamChat, Channel } from "stream-chat";
+import { OverlayProvider, Chat } from "stream-chat-expo";
+import { ActivityIndicator } from "react-native";
 
-export const ChatContext = createContext({});
+type ChatContextType = {
+  currentChannel?: Channel;
+};
+
+export const ChatContext = createContext<ChatContextType>({
+  currentChannel: undefined,
+});
 
 const ChatContextProvider = ({ children }: { children: React.ReactNode }) => {
   //component
 
   const [chatClient, setChatClient] = useState<StreamChat>();
+  const [currentChannel, setCurrentChannel] = useState<Channel>();
 
   const user = useUserData();
 
@@ -49,8 +58,18 @@ const ChatContextProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const value = { username: "Vadim" };
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+  if (!chatClient) {
+    return <ActivityIndicator />;
+  }
+
+  const value = { chatClient, currentChannel, setCurrentChannel };
+  return (
+    <OverlayProvider>
+      <Chat client={chatClient}>
+        <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
+      </Chat>
+    </OverlayProvider>
+  );
 };
 
 export const useChatContext = () => useContext(ChatContext);
